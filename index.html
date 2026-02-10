@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="MM-TRELLIS: Point-Cloud Guided Multi-Modal 3D Vehicle Generation in Autonomous Driving">
+  <meta name="keywords" content="MM-TRELLIS, 3D generation, autonomous driving, LiDAR">
+  <title>MM-TRELLIS</title>
+
+  <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/icon.png">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <script src="./static/js/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+  
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 明确指定4列布局 */
+  gap: 10px;
+  padding: 0;
+}
+
+.obj1, .obj2, .obj3, .obj4 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+
+#results-carousel .item {
+  padding: 8px;
+}
+
+#results-carousel video {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+
+
+/* 手机端适配 */
+@media screen and (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: auto auto; /* 2列布局 */
+  }
+
+  .obj1, .obj2, .obj3, .obj4 {
+    grid-column: span 2; /* 每个对象占据2列，实现上下堆叠效果 */
+  }
+
+  .content h4 {
+    font-size: 14px !important; /* 更适合手机端 */
+    padding: 0;
+    margin: 0 !important;
+  }
+}
+
+hr {
+  background-color: lightgray !important; /* 去掉分号后的多余分号 */
+}
+
+</style>
+
+</head>
+<body>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">MM-TRELLIS: Point-Cloud Guided Multi-Modal 3D Vehicle Generation in Autonomous Driving</h1>
+          <div class="is-size-5">
+            <span class="author-block">
+            <a href="https://scholar.google.com/citations?user=Z9pYdbsAAAAJ">Hongli Xiao</a>\(^{1,2,3*}\),
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=mSnE57oAAAAJ">Youjian Zhang</a>\(^{3*}\),
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=zEhtuI0AAAAJ">Yucai Bai</a>\(^{3}\),
+            </span>
+            <span class="author-block">
+              <a href="https://wang-chaoyue.github.io/">Chaoyue Wang</a>\(^{5}\),
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=H_7_oVcAAAAJ">Yaohui Jin</a>\(^{1}\),
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.com/citations?user=Mf7wqyMAAAAJ">Xiaoguang Ren</a>\(^{2}\),
+            </span>
+            <span class="author-block">
+              <a href="https://openreview.net/profile?id=~Wenjing_Yang1">Wenjing Yang</a>\(^{4}\),
+            </span>
+            <span class="author-block">
+              <a href="https://lan-long.github.io/">Long Lan</a>\(^{4\dagger}\)
+            </span>
+          </div>
+          <br>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>MoE Key Lab of Artificial Intelligence, AI Institute, Shanghai Jiao Tong University;</span><br>
+            <span class="author-block"><sup>2</sup>Academy of Military Science;</span>
+            <span class="author-block"><sup>3</sup>Bosch Innovation Software Development (Wuxi) Co., Ltd.;</span>
+            <span class="author-block"><sup>4</sup>College of Computer Science and Technology, National University of Defense Technology;</span><br>
+            <span class="author-block"><sup>5</sup>The University of Sydney</span>
+          </div>
+          <br>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block" style="margin-right: 20px;">\(^{*}\)Equal Contribution</span>
+            <span class="author-block">\(^{\dagger}\)Corresponding Author</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <span class="link-block" style="margin-right: 30px;">
+                <a 
+                   href="https://arxiv.org/abs/xxx"
+                   target="_blank"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <span class="link-block">
+                <a
+                  href="https://github.com/HongliXiao/MM-TRELLIS"
+                  target="_blank"
+                  class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                    <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                </a>
+              </span>
+            </div>
+
+          </div>
+        </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <video id="teaser" controls autoplay muted loop height="100%"
+            style="
+              box-shadow: 0 0 18px rgba(0,0,0,0.15);
+              border-radius: 8px;
+            ">
+        <source src="./images/teaser_app.mp4" type="video/mp4">
+      </video>
+      <br><br>
+      <h2 class="subtitle has-text-centered">
+        <strong>TL;DR:</strong>
+        MM-TRELLIS generates high-fidelity 3D vehicle meshes from
+        multi-view images and LiDAR guidance in autonomous driving scenes.
+    </h2>
+    </div>
+  </div>
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+        <div class="content has-text-justified">
+          <div class="content has-text-justified" style="background-color: rgba(236, 234, 250, 0.8); padding: 20px; border-radius: 10px;">
+          <p>
+            <b>Abstract:</b> 
+            Recovering realistic 3D vehicle models from autonomous driving scenes is crucial for synthesizing training data  and building simulation environment.
+            However, most existing vehicle generation methods fail to fully exploit multimodal sensors (<i>i.e.</i> multi-view images and LiDAR point clouds) and rely on neural rendering based reconstruction, leading to low-quality mesh.
+            Recently, native 3D generative models have made significant progress, yet they are not built for arbitrary multi-view inputs and often struggle with in-the-wild driving images.
+            In this work, we present MM-TRELLIS, a multi-modal version of TRELLIS for in-the-wild 3D vehicle generation that integrates LiDAR and image sensors from autonomous driving datasets into native 3D generative models.
+            Specifically, multi-view images are cycled as conditioning inputs, while LiDAR point clouds provide test-time guidance to ensure geometric accuracy and cross-view consistency.
+            During denoising, we first align the guidance point cloud with the model priors, then enforce consistency between the generated geometry and the guidance point cloud.
+            Finally, we introduce a voxel filtering strategy based on  the opacity of 3D Gaussian Splatting  to suppress floaters and produce clean meshes.
+            Comprehensive experiments on Waymo dataset demonstrate our method outperforms existing methods in high-fidelity 3D vehicle generation. 
+          </p>
+          </div>
+        </div>
+      </div>
+</section>
+
+
+<section class="section" id="Methodology">
+  <div class="container is-max-desktop content">
+    <div  class="columns is-centered has-text-centered">
+          <h2 class="subtitle has-text-centered">
+            Methodology
+          </h2>
+  </div>
+  <div class="content has-text-justified">
+    <img src="./images/2.pipe.png" alt="Methodology Illustration">
+    <p><b>Overview:</b> 
+      In stage I, we generate voxels with multi-view cycle conditioning and point cloud guidance. The LiDAR point cloud is first preprocessed and rotated by a learnable parameter $\hat{R}$ to a aligned orientation. Then the voxel guidance is applied to optimize the sampled latent during the denoising process.
+      Stage II perform a 3DGS generation with multi-view conditioning, ensuring the texture fidelity of the generation.
+      Finally, opacity-based mesh refinement is performed in Stage III: a voxel mask is obtained by thresholding Gaussian opacity and filtering SLAT features, and decoding the filtered features produces the final clean mesh.
+    </p> 
+  </div>
+  </div>
+</section>
+
+
+<section class="section" id="Results">
+  <div class="container is-max-desktop content">
+        <div  class="columns is-centered has-text-centered">
+          <h2 class="subtitle has-text-centered">
+            Results
+          </h2>
+  </div>
+  
+
+
+
+  <div class="container is-max-desktop">
+    <figure class="image">
+      <img src="./images/3.nvs_compare.png" alt="nvs_compare">
+    </figure>
+
+    <p>
+      Qualitative comparison with baseline methods in novel view synthesis.
+      The four images in Input column represent the multi-view inputs for multi-view methods, while the image in the black box is used for the single-view method.
+    </p>
+  </div>
+  <br>
+  <br>
+
+  <div class="container is-max-desktop">
+    <figure class="image">
+      <img src="./images/4.geo_comp.png" alt="nvs_compare">
+    </figure>
+
+    <p>
+      Qualitative comparison with baseline methods in 3D geometry.
+      Rightmost column shows the reference LiDAR point cloud.
+    </p>
+  </div>
+  <br>
+  <br>
+
+
+  <div class="container is-max-desktop">
+
+    <!-- <div id="results-carousel" class="carousel results-carousel">
+    <div class="container is-max-desktop content">
+      <video id="teaser" autoplay muted loop height="100%">
+        <source src="./images/compare.mp4"
+                type="video/mp4">
+      </video>
+    </div>
+    </div> -->
+
+    <div id="results-carousel" class="carousel results-carousel">
+
+      <!-- slide 1 -->
+      <div class="item">
+        <video  autoplay muted loop>
+          <source src="./images/comparison_p2.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <!-- slide 2 -->
+      <div class="item">
+        <video autoplay muted loop>
+          <source src="./images/comparison_p3.mp4" type="video/mp4">
+        </video>
+      </div>
+
+      <!-- slide 3 -->
+      <div class="item">
+        <video autoplay muted loop>
+          <source src="./images/comparison_p1.mp4" type="video/mp4">
+        </video>
+      </div>
+
+    </div>
+
+  </div>
+
+  <br>
+  <div class="columns is-centered has-text-centered">
+    <p>
+      Qualitative comparison with baseline methods.
+      MM-TRELLIS generates more accurate vehicle shapes and cleaner meshes by combining multi-view cycle-conditioning with LiDAR-guided optimization.
+    </p>
+  </div>
+  </div>
+  <!-- <br>
+
+  <div class="hero-body is-centered" style="width: 1024px; margin: 0 auto; background-color: rgba(236, 234, 250, 0.8); padding: 20px; border-radius: 10px;">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <div class="columns is-centered">
+    <div class="column">
+      <div class="content">
+        <h2 class="title is-6 has-text-centered">Input image</h2>
+      </div>
+    </div>
+    <div class="column">
+      <div class="content">
+        <h2 class="title is-6 has-text-centered">Amodal3R</h2>
+      </div>
+    </div>
+    <div class="column">
+      <div class="content">
+        <h2 class="title is-6 has-text-centered">Input image</h2>
+      </div>
+    </div>
+    <div class="column">
+      <div class="content">
+        <h2 class="title is-6 has-text-centered">Amodal3R</h2>
+      </div>
+    </div>
+  </div>    
+  <div class="full_label scene1">
+    <div class="grid-container">
+      <div class="obj1">
+        <img src="./images/motorcycle.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj2">
+        <model-viewer style="height: 196px; width: 196px;"
+                      environment-image=""
+                      skybox-image=""
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff";
+                      alt="Amodal3R"
+                      src="./images/glb/motorcycle.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+      <div class="obj3">
+        <img src="./images/train.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj4">
+        <model-viewer style="height: 196px; width: 196px;"
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff"
+                      alt="Amodal3R"
+                      src="./images/glb/train.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="full_label scene1">
+    <div class="grid-container">
+      <div class="obj1">
+        <img src="./images/bear.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj2">
+        <model-viewer style="height: 196px; width: 196px;"
+                      environment-image=""
+                      skybox-image=""
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff";
+                      alt="Amodal3R"
+                      src="./images/glb/bear.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+      <div class="obj3">
+        <img src="./images/pink_car.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj4">
+        <model-viewer style="height: 196px; width: 196px;"
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff"
+                      alt="Amodal3R"
+                      src="./images/glb/pink_car.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="full_label scene1">
+    <div class="grid-container">
+      <div class="obj1">
+        <img src="./images/pineapple.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj2">
+        <model-viewer style="height: 196px; width: 196px;"
+                      environment-image=""
+                      skybox-image=""
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff";
+                      alt="Amodal3R"
+                      src="./images/glb/pineapple.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+      <div class="obj3">
+        <img src="./images/hotdog.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj4">
+        <model-viewer style="height: 196px; width: 196px;"
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff"
+                      alt="Amodal3R"
+                      src="./images/glb/hotdog.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+    </div>
+  </div>
+  <br>
+  <div class="full_label scene1">
+    <div class="grid-container">
+      <div class="obj1">
+        <img src="./images/tiger.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj2">
+        <model-viewer style="height: 196px; width: 196px;"
+                      environment-image=""
+                      skybox-image=""
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff";
+                      alt="Amodal3R"
+                      src="./images/glb/tiger.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+      <div class="obj3">
+        <img src="./images/suitcase.png" height="196" width="196" alt="Input Image">
+      </div>
+      <div class="obj4">
+        <model-viewer style="height: 196px; width: 196px;"
+                      orientation="0deg 0deg -90deg"
+                      background-color="#ffffff"
+                      alt="Amodal3R"
+                      src="./images/glb/suitcase.glb"
+                      camera-controls auto-rotate
+                      exposure="2"
+                      generate-schema>
+        </model-viewer>
+      </div>
+    </div> -->
+  <!-- </div> -->
+<!-- </div> -->
+</section>
+
+
+
+<section class="section" id="Extension">
+  <div class="container is-max-desktop content">
+        <div  class="columns is-centered has-text-centered">
+          <h2 class="subtitle has-text-centered">
+            Extension
+          </h2>
+  </div>
+  <div class="container is-max-desktop content">
+    <video id="extension" controls autoplay muted loop height="100%">
+      <source src="./images/extension-VGGT.mp4"
+              type="video/mp4">
+    </video>
+  </div>
+  <div class="columns is-centered has-text-centered">
+    <p>
+      Extension to image-only settings.
+      MM-TRELLIS can generate accurate geometry using point clouds estimated from multi-view images via VGGT, without the need for a LiDAR sensor.
+    </p>
+  </div>
+  </div>
+</section>
+
+
+
+<section class="section" id="Concurrent works">
+  <div class="container is-max-desktop content">
+        <div  class="columns is-centered has-text-centered">
+    <h2 class="subtitle has-text-centered">Related Links</h2>
+  </div>
+    Check these related work, which provide thought-provoking ideas towards this direction:
+    <li><a href="https://arxiv.org/abs/2412.01506">TRELLIS</a>. A native 3D generative model built on a unified Structured Latent representation and Rectified Flow Transformers, enabling versatile and high-quality 3D asset creation. </li>
+    <li><a href="https://arxiv.org/abs/2412.13389">Marigold-DC</a>. A plug-and-play depth completion method built on a diffusion-based monocular depth foundation model with test-time sparse-depth guidance, enabling strong zero-shot generalization across domains. </li>
+    <br>
+  </div>
+</section>
+
+
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+            This webpage originated from <a href="https://sm0kywu.github.io/Amodal3R/">Amodal3R</a>.
+            We sincerely thank <a href="https://sm0kywu.github.io/CV/CV.html">Tianhao Wu</a> for developing and open-sourcing this template.
+          </p>
+        </div>
+      </div>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
